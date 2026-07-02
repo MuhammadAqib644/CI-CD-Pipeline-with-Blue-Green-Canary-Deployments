@@ -1,0 +1,12 @@
+{
+  "name": "bluegreen-canary-demo-app",
+  "version": "1.0.0",
+  "description": "Tiny demo app for CI/CD Blue/Green + Canary pipeline",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

@@ -1,0 +1,45 @@
+# Public-facing service. An AWS Network Load Balancer is provisioned automatically
+# because of the annotation + type: LoadBalancer.
+apiVersion: v1
+kind: Service
+metadata:
+  name: myapp
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+spec:
+  type: LoadBalancer
+  selector:
+    app: myapp
+  ports:
+    - port: 80
+      targetPort: 3000
+
+---
+# "Stable" service — Argo Rollouts automatically points this at whichever
+# ReplicaSet is currently considered stable (old version during a rollout).
+apiVersion: v1
+kind: Service
+metadata:
+  name: myapp-stable
+spec:
+  type: ClusterIP
+  selector:
+    app: myapp
+  ports:
+    - port: 80
+      targetPort: 3000
+
+---
+# "Canary" / "Preview" service — Argo Rollouts points this at the new
+# ReplicaSet while it's being tested, before it's promoted.
+apiVersion: v1
+kind: Service
+metadata:
+  name: myapp-canary
+spec:
+  type: ClusterIP
+  selector:
+    app: myapp
+  ports:
+    - port: 80
+      targetPort: 3000

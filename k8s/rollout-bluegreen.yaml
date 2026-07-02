@@ -1,0 +1,53 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: myapp
+spec:
+  replicas: 3
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      containers:
+        - name: myapp
+          image: <ECR_REPO_URI>:latest   # GitHub Actions updates this on every push
+          ports:
+            - containerPort: 3000
+          env:
+            - name: APP_VERSION
+              value: "v1"
+            - name: APP_COLOR
+              value: "blue"
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 3000
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+  strategy:
+    blueGreen:
+      # "myapp" (LoadBalancer, real users) flips to the new version on promotion
+      activeService: myapp
+      # "myapp-canary" (ClusterIP) always points at the newest ("green") pods
+      # so you can test them before sending real traffic their way
+      previewService: myapp-canary
+      autoPromotionEnabled: false        # require a manual `promote` (set true to auto-promote)
+      scaleDownDelaySeconds: 30          # keep old ("blue") pods around briefly for instant rollback
+      prePromotionAnalysis:
+        templates:
+          - templateName: healthcheck
+        args:
+          - name: service-name
+            value: myapp-canary.default.svc.cluster.local
