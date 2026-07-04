@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: myapp
-          image: <ECR_REPO_URI>:latest   # GitHub Actions updates this on every push
+          image: 712685115205.dkr.ecr.eu-north-1.amazonaws.com/bluegreen-canary-demo:latest   # GitHub Actions updates this on every push
           ports:
             - containerPort: 3000
           env:
