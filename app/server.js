@@ -3,8 +3,8 @@ const os = require('os');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const VERSION = process.env.APP_VERSION || 'v2';
-const COLOR = process.env.APP_COLOR || 'green';
+const VERSION = process.env.APP_VERSION || 'v3';
+const COLOR = process.env.APP_COLOR || 'gray';
 
 app.get('/', (req, res) => {
   res.send(`
