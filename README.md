@@ -1,20 +1,19 @@
 # CI/CD Pipeline with Blue/Green &amp; Canary Deployments
 
-![CI](https://github.com/<your-username>/bluegreen-canary-demo/actions/workflows/deploy.yml/badge.svg)
 ![AWS](https://img.shields.io/badge/AWS-EKS-orange)
 ![Argo Rollouts](https://img.shields.io/badge/Argo-Rollouts-0F6E56)
 ![GitHub Actions](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-7C3AED)
 
 A production-style CI/CD pipeline that ships a containerized app to **Amazon EKS** using
-**Argo Rollouts**, with a real choice of **Blue/Green** or **Canary** deployment strategy —
+**Argo Rollouts**, with a real choice of **Blue/Green** or **Canary** deployment strategy
 including automated health checks, one-command promote/rollback, and zero long-lived AWS
 credentials (GitHub OIDC).
 
-> **Push to `main` → image is built and pushed to ECR → Argo Rollouts shifts live traffic to
-> the new version, gradually (canary) or with a single manual promotion (blue/green) →
-> rollback in one command if anything looks wrong.**
+ **Push to `main` → image is built and pushed to ECR → Argo Rollouts shifts live traffic to
+ the new version, gradually (canary) or with a single manual promotion (blue/green) →
+ rollback in one command if anything looks wrong.**
 
----
+
 
 ## Table of Contents
 
@@ -26,11 +25,6 @@ credentials (GitHub OIDC).
 - [Setup](#setup)
 - [How the Deployments Work](#how-the-deployments-work)
 - [Useful Commands](#useful-commands)
-- [Troubleshooting](#troubleshooting)
-- [Cleanup](#cleanup)
-- [Roadmap](#roadmap)
-
----
 
 ## Architecture
 
@@ -79,49 +73,37 @@ flowchart LR
     F --> G["✅ 100% traffic"]
     B -.->|health check fails x2| H["⏪ Auto-abort & rollback"]
 ```
-
----
-
 ## Tech Stack
 
 | Layer | Tool |
 |---|---|
 | Cloud provider | AWS (EKS, ECR, IAM, NLB) |
-| CI/CD | GitHub Actions (OIDC — no static AWS keys) |
+| CI/CD | GitHub Actions (OIDC no static AWS keys) |
 | Deployment controller | Argo Rollouts |
 | Container runtime | Docker |
 | App | Node.js + Express (demo app) |
 | Cluster provisioning | eksctl |
 
----
-
 ## Screenshots
 
-> Add your own screenshots to `docs/screenshots/` using the filenames below — they'll show
-> up automatically here once added, since the paths are already wired into this README.
-
 ### GitHub Actions pipeline — successful run
-![CI pipeline success](docs/screenshots/github-actions-success.png)
+<img width="212" height="338" alt="Screenshot 2026-07-04 184203" src="https://github.com/user-attachments/assets/3fc1e1de-0012-434e-b16f-5078b011570c" />
+
 
 ### App running — v1 (blue / stable)
-![App v1 blue](docs/screenshots/app-v1-blue.png)
+<img width="960" height="502" alt="Screenshot 2026-07-04 131246" src="https://github.com/user-attachments/assets/e1ac7c5d-2b86-4b16-b8e2-affad9a8f0d5" />
 
-### Blue/Green — previewing the new version before promotion
-![Blue/Green preview](docs/screenshots/bluegreen-preview.png)
 
 ### Blue/Green — after promotion (instant traffic switch)
-![Blue/Green promoted](docs/screenshots/bluegreen-promoted.png)
+<img width="956" height="505" alt="Screenshot 2026-07-04 200351" src="https://github.com/user-attachments/assets/c50abb63-f140-46f7-8b84-9a5a39827da0" />
+
 
 ### Canary — traffic weight shifting step by step
-![Canary progress](docs/screenshots/canary-progress.png)
+<img width="960" height="490" alt="Screenshot 2026-07-04 210332" src="https://github.com/user-attachments/assets/ad54ed63-2457-47c4-8d0c-87e95d8b609e" />
+
 
 ### Argo Rollouts dashboard — live stable vs canary split
-![Rollouts dashboard](docs/screenshots/rollouts-dashboard.png)
-
-### Rollback in action (abort / undo)
-![Rollback demo](docs/screenshots/rollback-demo.png)
-
----
+<img width="331" height="190" alt="Screenshot 2026-07-04 210434" src="https://github.com/user-attachments/assets/cbd44bf2-cb34-4840-b0e8-a0161b3ca8f5" />
 
 ## Project Structure
 
@@ -139,13 +121,8 @@ bluegreen-canary-demo/
 │   └── rollout-canary.yaml     # Canary strategy Rollout
 ├── .github/workflows/
 │   └── deploy.yml              # build → push to ECR → patch Rollout on EKS
-├── docs/screenshots/           # screenshots referenced above
-├── IMPLEMENTATION-GUIDE.md      # full click-by-click walkthrough (start here)
 └── README.md
 ```
-
----
-
 ## Prerequisites
 
 - AWS account with permissions to create EKS/ECR/IAM resources
@@ -208,28 +185,4 @@ kubectl argo rollouts undo myapp                       # roll back to previous r
 kubectl argo rollouts dashboard                         # web UI at localhost:3100
 ```
 
-## Troubleshooting
 
-Common issues (auth errors, `ImagePullBackOff`, stuck rollouts, EKS access entries) and their
-fixes are covered in the **Troubleshooting** section of
-[`IMPLEMENTATION-GUIDE.md`](./IMPLEMENTATION-GUIDE.md).
-
-## Cleanup
-
-```bash
-eksctl delete cluster --name bluegreen-canary-demo --region <YOUR_REGION>
-aws ecr delete-repository --repository-name bluegreen-canary-demo --force --region <YOUR_REGION>
-```
-Also delete the IAM role, IAM policy, and OIDC provider created in Setup step 5 if you don't
-plan to reuse them.
-
-## Roadmap
-
-- [ ] Exact-percentage traffic splitting via AWS Load Balancer Controller + ALB traffic routing
-- [ ] Full GitOps with Argo CD instead of direct `kubectl patch` from CI
-- [ ] Prometheus-based analysis (error rate / latency) instead of a simple HTTP health check
-- [ ] Slack/Teams notifications on rollout start, promotion, and abort
-
----
-
-*Built as a hands-on exploration of progressive delivery patterns on Kubernetes.*
