@@ -9,7 +9,7 @@ on:
   workflow_dispatch: {}
 
 permissions:
-  id-token: write   # required for OIDC -> AWS
+  id-token: write
   contents: read
 
 env:
@@ -52,14 +52,15 @@ jobs:
         run: |
           aws eks update-kubeconfig --name "$EKS_CLUSTER_NAME" --region "$AWS_REGION"
           echo "KUBECONFIG=/home/runner/.kube/config" >> "$GITHUB_ENV"
-          kubectl get nodes
+          # Verify with explicit kubeconfig path
+          kubectl get nodes --kubeconfig /home/runner/.kube/config
 
       - name: Trigger rollout with new image
         env:
           IMAGE_URI: ${{ steps.build.outputs.image_uri }}
         run: |
-          kubectl set image rollout "$ROLLOUT_NAME" -n "$K8S_NAMESPACE" myapp="$IMAGE_URI"
+          kubectl set image rollout "$ROLLOUT_NAME" -n "$K8S_NAMESPACE" myapp="$IMAGE_URI" --kubeconfig /home/runner/.kube/config
 
       - name: Show rollout status
         run: |
-          kubectl get rollout "$ROLLOUT_NAME" -n "$K8S_NAMESPACE" -o wide
+          kubectl get rollout "$ROLLOUT_NAME" -n "$K8S_NAMESPACE" -o wide --kubeconfig /home/runner/.kube/config
