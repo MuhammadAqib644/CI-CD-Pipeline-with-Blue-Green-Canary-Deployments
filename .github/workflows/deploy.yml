@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 env:
-  AWS_REGION: eu-north-1               # <-- change if you used a different region
+  AWS_REGION: eu-north-1
   EKS_CLUSTER_NAME: bluegreen-canary-demo
   ECR_REPOSITORY: bluegreen-canary-demo
   K8S_NAMESPACE: default
@@ -48,16 +48,17 @@ jobs:
           docker push "$ECR_REGISTRY/$ECR_REPOSITORY:latest"
           echo "image_uri=$IMAGE_URI" >> "$GITHUB_OUTPUT"
 
-      - name: Update kubeconfig
-        run: aws eks update-kubeconfig --name "$EKS_CLUSTER_NAME" --region "$AWS_REGION"
+      - name: Update kubeconfig and verify EKS access
+        run: |
+          aws eks update-kubeconfig --name "$EKS_CLUSTER_NAME" --region "$AWS_REGION"
+          echo "KUBECONFIG=/home/runner/.kube/config" >> "$GITHUB_ENV"
+          kubectl get nodes
 
       - name: Trigger rollout with new image
         env:
           IMAGE_URI: ${{ steps.build.outputs.image_uri }}
         run: |
-          kubectl patch rollout "$ROLLOUT_NAME" -n "$K8S_NAMESPACE" \
-            --type merge \
-            -p '{"spec":{"template":{"spec":{"containers":[{"name":"myapp","image":"'"$IMAGE_URI"'"}]}}}}'
+          kubectl set image rollout "$ROLLOUT_NAME" -n "$K8S_NAMESPACE" myapp="$IMAGE_URI"
 
       - name: Show rollout status
         run: |
