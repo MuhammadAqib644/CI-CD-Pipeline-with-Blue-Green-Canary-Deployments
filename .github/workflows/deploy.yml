@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 env:
-  AWS_REGION: us-east-1               # <-- change if you used a different region
+  AWS_REGION: eu-north-1               # <-- change if you used a different region
   EKS_CLUSTER_NAME: bluegreen-canary-demo
   ECR_REPOSITORY: bluegreen-canary-demo
   K8S_NAMESPACE: default
