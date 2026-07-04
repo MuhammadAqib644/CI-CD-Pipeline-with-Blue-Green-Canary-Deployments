@@ -59,7 +59,9 @@ jobs:
         env:
           IMAGE_URI: ${{ steps.build.outputs.image_uri }}
         run: |
-          kubectl set image rollout "$ROLLOUT_NAME" -n "$K8S_NAMESPACE" myapp="$IMAGE_URI" --kubeconfig /home/runner/.kube/config
+            kubectl patch rollout "$ROLLOUT_NAME" -n "$K8S_NAMESPACE" \
+                  --type merge \
+                  -p '{"spec":{"template":{"spec":{"containers":[{"name":"myapp","image":"'"$IMAGE_URI"'"}]}}}}'
 
       - name: Show rollout status
         run: |
